@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "SmartAssetTrackingSystem": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
