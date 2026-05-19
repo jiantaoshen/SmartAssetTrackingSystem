@@ -7,6 +7,9 @@ namespace SmartAssetTrackingSystem.Models
     public abstract class Asset
     {
         public int Id { get; set; }
+
+        public string AssetType { get; set; }
+
         public string Brand { get; set; }
 
         public string ModelName { get; set; }

@@ -1,4 +1,4 @@
-# Smart Asset Tracking System
+# Smart Asset Tracking System (work in progress)
 Small console application to track company assets (computers and phones). 
 The app stores simple asset records, calculates end-of-life (EoL) and prints a formatted asset list with local and converted prices.
 This project is an improvement of a previous project called ["WeeklyProject03_AssetTracking"](https://github.com/jiantaoshen/WeeklyProject03_AssetTracking).

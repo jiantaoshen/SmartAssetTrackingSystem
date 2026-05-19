@@ -1,11 +1,10 @@
-﻿using SmartAssetTrackingSystem.Models;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace SmartAssetTrackingSystem.Services
+namespace SmartAssetTrackingSystem.Helpers
 {
-    public static class AssetServices
+    public static class AssetHelper
     {
         public static decimal ConvertUsdToLocalCurrency(decimal usdAmount, decimal exchangeRate)
         {
@@ -26,7 +25,5 @@ namespace SmartAssetTrackingSystem.Services
                 return "YELLOW";
             return "NORMAL";
         }
-
-
     }
 }
