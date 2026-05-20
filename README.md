@@ -27,9 +27,12 @@ The console app will prompt for new assets. Enter `Q` for the office prompt to q
 
 ## Features
 - Add assets via interactive console input
-- Sample assets are inserted at startup for quick inspection (work in progress)
-- List assets grouped by office/type with price converted to USD using a currency service (work in progress)
+- User input local price based on the office location (USD for US, SEK for Sweden, EUR for Germany) and it will be converted to USD (exchange rate based on current exchange rates) 
+- Show 20 assets (Pagingation, could be changed in AssetService.cs) with EoL status (indicated by color coding, yellow for 6 months remaining, red for 3 months remaining and expired)
+- Menu navigation with options to add/remove/update/search assets, view assets, and quit the application
 - Database `Assets` with discriminator `ComputerAsset` and `MobileAsset`
+- Sample assets are inserted at startup for quick inspection (work in progress)
+
 
 ## Tech stack
 - C# 14

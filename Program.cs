@@ -16,18 +16,44 @@ public static class Program
 
         var assetService = new AssetService(repo);
 
-        await InputData(assetService, currencyService);
-        await ShowList(assetService);
-    }
 
-    static bool IsQuit(string input)
-    {
-        return input.Trim().Equals("q", StringComparison.OrdinalIgnoreCase);
+        while (true)
+        {
+            PrintMenu();
+            string choice = Console.ReadLine();
+
+            switch (choice)
+            {
+                case "1":
+                    await InputData(assetService, currencyService);
+                    break;
+                case "2":
+                    await ShowList(assetService);
+                    Pause();
+                    break;
+                case "3":
+                    Pause();
+                    break;
+                case "4":
+                    Pause();
+                    break;
+                case "5":
+                    Pause();
+                    break;
+                case "6":
+                    return;
+                default:
+                    Console.WriteLine("Invalid choice!");
+                    Pause();
+                    break;
+            }
+        }
     }
 
     public static async Task InputData(AssetService assetService, CurrencyService currencyService)
     {
         var rates = await currencyService.GetRatesAsync();
+        Console.Clear();
 
         while (true)
         {
@@ -41,7 +67,7 @@ public static class Program
 
                 string inputOffice = Console.ReadLine() ?? "";
 
-                if (IsQuit(inputOffice))
+                if (inputOffice.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
                     return; // exits entire method
 
                 if (int.TryParse(inputOffice, out officeNumber) && (officeNumber == 1 || officeNumber == 2 || officeNumber == 3))
@@ -232,5 +258,24 @@ public static class Program
 
         Console.WriteLine("\n");
         Console.WriteLine(new string('=', header.Length));
+    }
+
+
+    static void PrintMenu()
+    {
+        Console.Clear();
+
+        Console.WriteLine("Menu");
+        Console.WriteLine("1. Add Asset");
+        Console.WriteLine("2. Show all Assets");
+        Console.WriteLine("3. Update Asset");
+        Console.WriteLine("4. Delete Asset");
+        Console.WriteLine("5. Search Asset");
+        Console.WriteLine("6. Exit");
+    }
+    static void Pause()
+    {
+        Console.WriteLine("\nPress any key to continue...");
+        Console.ReadKey();
     }
 }

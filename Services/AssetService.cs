@@ -21,6 +21,7 @@ namespace SmartAssetTrackingSystem.Services
 
         public async Task<List<Asset>> GetAssets()
         {
+            // Pragination is hardcoded for now, but we can easily modify this method to accept page number and page size as parameters in the future.
             return await _repo.GetAssets(1, 20);
         }
 
