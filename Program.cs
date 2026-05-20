@@ -3,7 +3,6 @@ using SmartAssetTrackingSystem.Models;
 using SmartAssetTrackingSystem.Repositories;
 using SmartAssetTrackingSystem.Services;
 using SmartAssetTrackingSystem.Helpers;
-using System.Collections;
 using System.Globalization;
 
 public static class Program
@@ -15,12 +14,18 @@ public static class Program
         var repo = new AssetRepository();
         var currencyService = new CurrencyService();
 
-        var addAsset = new AssetService(repo);
+        var assetService = new AssetService(repo);
 
-        await Run(addAsset, currencyService);
+        await InputData(assetService, currencyService);
+        await ShowList(assetService);
     }
 
-    public static async Task Run(AssetService addAsset, CurrencyService currencyService)
+    static bool IsQuit(string input)
+    {
+        return input.Trim().Equals("q", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public static async Task InputData(AssetService assetService, CurrencyService currencyService)
     {
         var rates = await currencyService.GetRatesAsync();
 
@@ -28,23 +33,21 @@ public static class Program
         {
             Console.WriteLine("To enter a new product - follow the steps | To quit - enter: \"Q\" ");
 
-            Console.Write("Enter OfficeLocation (1: USA 2: Sweden 3: Germany): ");
-
-            string inputOffice = Console.ReadLine() ?? "";
             int officeNumber;
-
-            if (inputOffice.Trim().ToLower() == "q") break;
 
             while (true)
             {
+                Console.Write("Enter OfficeLocation (1: USA 2: Sweden 3: Germany): ");
+
+                string inputOffice = Console.ReadLine() ?? "";
+
+                if (IsQuit(inputOffice))
+                    return; // exits entire method
+
                 if (int.TryParse(inputOffice, out officeNumber) && (officeNumber == 1 || officeNumber == 2 || officeNumber == 3))
                     break;
 
                 Console.WriteLine("Invalid input. Try again.");
-
-                Console.Write("Enter OfficeLocation (1: USA 2: Sweden 3: Germany): ");
-
-                inputOffice = Console.ReadLine() ?? "";
             }
 
             int typeNumber;
@@ -142,23 +145,22 @@ public static class Program
 
             if (typeNumber == 1 || typeNumber == 2)
             {
-                addAsset.AddAsset(asset);
+                assetService.AddAsset(asset);
                 Console.WriteLine("Computer Asset added successfully!\n");
             }
             else
             {
-                addAsset.AddAsset(asset);
+                assetService.AddAsset(asset);
                 Console.WriteLine("Mobile Asset added successfully!\n");
             }
         }
     }
 
-
-    /*public static async Task ShowList(ListAssets listAssets)
+    public static async Task ShowList(AssetService assetService)
     {
         Console.Clear();
 
-        var lines = await listAssets.ExecuteAsync();
+        var assets = await assetService.GetAssets();
 
         string header =
             $"{"Office",-15}" +
@@ -166,33 +168,69 @@ public static class Program
             $"{"Brand",-15}" +
             $"{"Model",-15}" +
             $"{"Purchase Date",-15}" +
-            $"{"Price (Local)",-15}" +
-            $"{"Currency",-15}" +
-            $"{"Price (Dollar)",-15}";
+            $"{"Price (Local)",15}" +
+            $"{"Currency",15}" +
+            $"{"Price (Dollar)",15}";
 
+        string title = "    Asset list    ";
+        int totalWidth = header.Length;
+
+        int left = (totalWidth - title.Length) / 2;
+
+        string titleline =
+            new string('=', left) +
+            title +
+            new string('=', totalWidth - left - title.Length);
+
+        Console.WriteLine(titleline + "\n");
         Console.WriteLine("\n" + header);
         Console.WriteLine(new string('-', header.Length));
 
-        foreach (var line in lines)
+        foreach (var asset in assets)
         {
-            if (line.StartsWith("[RED]"))
+            string inputCurrency;
+            if (asset.OfficeLocation == "USA")
+            {
+                inputCurrency = "USD";
+            }
+            else if (asset.OfficeLocation == "Sweden")
+            {
+                inputCurrency = "SEK";
+            }
+            else
+            {
+                inputCurrency = "EUR";
+            }
+
+            string line =
+                $"{asset.OfficeLocation,-15}" +
+                $"{asset.AssetType,-15}" +
+                $"{asset.Brand,-15}" +
+                $"{asset.ModelName,-15}" +
+                $"{asset.PurchaseDate,-15:yyyy-MM-dd}" +
+                $"{asset.LocalPrice, 15:N2}" +
+                $"{inputCurrency ?? "N/A", 15}" +
+                $"{asset.PurchasePriceUSD, 15:N2}";
+
+            // Optional coloring logic (based on type or rules)
+            if (asset.WarrantyExpirationDate.AddMonths(-3) < DateTime.Now)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine(line.Replace("[RED] ", ""));
             }
-            else if (line.StartsWith("[YELLOW]"))
+            else if (asset.WarrantyExpirationDate.AddMonths(-6) < DateTime.Now)
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine(line.Replace("[YELLOW] ", ""));
             }
             else
             {
                 Console.ResetColor();
-                Console.WriteLine(line);
             }
+
+            Console.WriteLine(line);
+            Console.ResetColor();
         }
 
-        Console.ResetColor();
+        Console.WriteLine("\n");
+        Console.WriteLine(new string('=', header.Length));
     }
-    */
 }

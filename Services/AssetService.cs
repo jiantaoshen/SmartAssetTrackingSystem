@@ -19,6 +19,11 @@ namespace SmartAssetTrackingSystem.Services
             _repo.AddAsset(asset);
         }
 
+        public async Task<List<Asset>> GetAssets()
+        {
+            return await _repo.GetAssets(1, 20);
+        }
+
 
     }
 }
