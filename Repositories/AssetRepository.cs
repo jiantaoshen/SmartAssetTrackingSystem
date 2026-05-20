@@ -1,23 +1,17 @@
-﻿using SmartAssetTrackingSystem.Models;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using SmartAssetTrackingSystem.Data;
+using SmartAssetTrackingSystem.Models;
 
 namespace SmartAssetTrackingSystem.Repositories
 {
 
     public class AssetRepository : IAssetRepository
     {
-        private readonly List<Asset> _assets = new();
+        private readonly MyDbContext _context = new();
 
-        public void Add(Asset asset)
+        public void AddAsset(Asset asset)
         {
-            _assets.Add(asset);
-        }
-
-        public List<Asset> GetAll()
-        {
-            return _assets;
+            _context.Assets.Add(asset);
+            _context.SaveChanges();
         }
     }
 }

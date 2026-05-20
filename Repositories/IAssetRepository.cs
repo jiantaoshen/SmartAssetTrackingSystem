@@ -7,8 +7,6 @@ namespace SmartAssetTrackingSystem.Repositories
 {
     public interface IAssetRepository
     {
-        void Add(Asset asset);
-
-        List<Asset> GetAll();
+        void AddAsset(Asset asset); 
     }
 }

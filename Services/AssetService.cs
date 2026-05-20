@@ -16,21 +16,9 @@ namespace SmartAssetTrackingSystem.Services
 
         public void AddAsset(Asset asset)
         {
-            _repo.Add(asset);
+            _repo.AddAsset(asset);
         }
 
-        public List<Asset> GetAllAssets()
-        {
-            return _repo.GetAll();
-        }
 
-        public List<Asset> GetAssetsSorted()
-        {
-            return _repo.GetAll()
-                .OrderBy(a => a.OfficeLocation)
-                .ThenBy(a => a.AssetType)
-                .ThenBy(a => a.PurchaseDate)
-                .ToList();
-        }
     }
 }

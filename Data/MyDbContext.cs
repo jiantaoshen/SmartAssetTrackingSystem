@@ -1,11 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.ConstrainedExecution;
-using System.Text;
-using System.Threading.Tasks;
-
+using SmartAssetTrackingSystem.Models;
 
 namespace SmartAssetTrackingSystem.Data
 {
@@ -20,7 +14,9 @@ namespace SmartAssetTrackingSystem.Data
             optionsBuilder.UseSqlServer(connectionString);
         }
 
-        //public DbSet<Rocket> Rockets { get; set; }
+        public DbSet<Asset> Assets { get; set; }
+        public DbSet<ComputerAsset> ComputerAssets { get; set; }
+        public DbSet<MobileAsset> MobileAssets { get; set; }
 
         protected override void OnModelCreating(ModelBuilder ModelBuilder)
         {

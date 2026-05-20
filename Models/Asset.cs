@@ -8,11 +8,11 @@ namespace SmartAssetTrackingSystem.Models
     {
         public int Id { get; set; }
 
-        public string AssetType { get; set; }
+        public string AssetType { get; set; } = string.Empty;
 
-        public string Brand { get; set; }
+        public string Brand { get; set; } = string.Empty;
 
-        public string ModelName { get; set; }
+        public string ModelName { get; set; } = string.Empty;
 
         public DateTime PurchaseDate { get; set; }
 
@@ -20,11 +20,11 @@ namespace SmartAssetTrackingSystem.Models
 
         public decimal LocalPrice { get; set; }
 
-        public string OfficeLocation { get; set; }
+        public string OfficeLocation { get; set; } = string.Empty;
 
-        public string SerialNumber { get; set; }
+        public string? SerialNumber { get; set; }
 
-        public string EmployeeUsername { get; set; }
+        public string? EmployeeUsername { get; set; }
 
         public DateTime WarrantyExpirationDate { get; set; }
     }
