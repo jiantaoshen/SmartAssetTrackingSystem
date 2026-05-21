@@ -7,17 +7,16 @@ This project is an improvement of a previous project called ["WeeklyProject03_As
 - Changed from Clean Architecture to Layered Architecture (N-tier) with Separation of Concerns (SoC)
 - Pass only the data the service actually needs instead of the entire asset object, to reduce coupling and improve clarity.
 - Use Entity Framework Core with an SQL local database instead of hardcoded sample data, to allow for more realistic data management.
-- 
 
 ## Set up
-1. Install follow Nuget packages in Visual Studio:
+1. Clone the repository and open the solution in Visual Studio.
+2. Install follow Nuget packages in Visual Studio:
 	- Microsoft.EntityFrameworkCore 10.0.8
 	- Microsoft.EntityFrameworkCore.Tools 10.0.8
 	- Microsoft.EntityFrameworkCore.Design 10.0.8
 	- Microsoft.EntityFrameworkCore.sqlServer 10.0.8
-2. Install SQL Server Developer Edition or use an existing SQL Server instance.
-3. Install SQL Server Management Studio (SSMS) in Visual Studio Installer for database management.
-4. Clone the repository and open the solution in Visual Studio.
+3. Install SQL Server Developer Edition or use an existing SQL Server instance.
+4. Install SQL Server Management Studio (SSMS) in Visual Studio Installer for database management.
 5. Run `add-migration init-table-creation` in the Package Manager Console to create the initial migration for the database schema.
 6. Run `update-database` in the Package Manager Console to apply the migration and create the database and tables.
 7. Run the console application to start adding assets and viewing the list.
@@ -31,7 +30,7 @@ The console app will prompt for new assets. Enter `Q` for the office prompt to q
 - Show 20 assets (Pagingation, could be changed in AssetService.cs) with EoL status (indicated by color coding, yellow for 6 months remaining, red for 3 months remaining and expired)
 - Menu navigation with options to add/remove/update/search assets, view assets, and quit the application
 - Database `Assets` with discriminator `ComputerAsset` and `MobileAsset`
-- Sample assets are inserted at startup for quick inspection (work in progress)
+- Sample assets are inserted at startup for quick inspection
 
 
 ## Tech stack
