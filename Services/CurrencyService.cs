@@ -9,6 +9,7 @@ public class CurrencyService : ICurrencyService
 
     public async Task<Dictionary<string, decimal>> GetRatesAsync()
     {
+        // Cache rates for 12 hours to reduce load on ECB and improve performance
         if (_cachedRates != null && DateTime.Now - _lastFetchTime < TimeSpan.FromHours(12))
             return _cachedRates;
 

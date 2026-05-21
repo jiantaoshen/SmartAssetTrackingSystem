@@ -24,12 +24,12 @@ public static class Program
         while (true)
         {
             PrintMenu();
-            string choice = Console.ReadLine();
+            string choice = Console.ReadLine() ?? "";
 
             switch (choice)
             {
                 case "1":
-                    await InputData(assetService, currencyService);
+                    await InputData(context, assetService, currencyService);
                     break;
                 case "2":
                     await ShowList(assetService, context);
@@ -37,7 +37,7 @@ public static class Program
                     break;
                 case "3":
                     await ShowList(assetService, context);
-                    await EditAsset(assetService);
+                    await EditAsset(context, assetService);
                     Pause();
                     break;
                 case "4":
@@ -59,7 +59,7 @@ public static class Program
         }
     }
 
-    private static async Task InputData(AssetService assetService, CurrencyService currencyService)
+    private static async Task InputData(MyDbContext context, AssetService assetService, CurrencyService currencyService)
     {
         var rates = await currencyService.GetRatesAsync();
         Console.Clear();
@@ -72,14 +72,14 @@ public static class Program
 
             while (true)
             {
-                Console.Write("Enter OfficeLocation (1: USA 2: Sweden 3: Germany): ");
+                Console.Write("Enter OfficeLocation (1: Sweden Office 2: USA Office 3: Germany Office 4.Turkey Office): ");
 
                 string inputOffice = Console.ReadLine() ?? "";
 
                 if (inputOffice.Trim().Equals("q", StringComparison.OrdinalIgnoreCase))
                     return; // exits entire method
 
-                if (int.TryParse(inputOffice, out officeNumber) && (officeNumber == 1 || officeNumber == 2 || officeNumber == 3))
+                if (int.TryParse(inputOffice, out officeNumber) && (officeNumber >= 1 && officeNumber <= 4))
                     break;
 
                 Console.WriteLine("Invalid input. Try again.");
@@ -127,7 +127,7 @@ public static class Program
 
             while (true)
             {
-                Console.Write($"Enter Price (Local Currency): ");
+                Console.Write($"Enter Price (USD): ");
                 string inputPrice = Console.ReadLine() ?? "";
 
                 if (decimal.TryParse(inputPrice, out price))
@@ -152,30 +152,39 @@ public static class Program
                 asset.AssetType = "Mobile";
             }
 
-            string inputCurrency;
+            var swedenOffice = context.Offices.First(o => o.Country == "Sweden");
+            var usaOffice = context.Offices.First(o => o.Country == "USA");
+            var germanyOffice = context.Offices.First(o => o.Country == "Germany");
+            var turkeyOffice = context.Offices.First(o => o.Country == "Turkey");
 
+            string currency;
             if (officeNumber == 1)
             {
-                asset.OfficeLocation = "USA";
-                inputCurrency = "USD";
+                asset.OfficeId = swedenOffice.Id;
+                currency = swedenOffice.Currency;
             }
             else if (officeNumber == 2)
             {
-                asset.OfficeLocation = "Sweden";
-                inputCurrency = "SEK";
+                asset.OfficeId = usaOffice.Id;
+                currency = usaOffice.Currency;
+            }
+            else if (officeNumber == 3)
+            {
+                asset.OfficeId = germanyOffice.Id;
+                currency = germanyOffice.Currency;
             }
             else
             {
-                asset.OfficeLocation = "Germany";
-                inputCurrency = "EUR";
+                asset.OfficeId = turkeyOffice.Id;
+                currency = turkeyOffice.Currency;
             }
 
             asset.Brand = inputBrand;
             asset.ModelName = inputModelName;
             asset.PurchaseDate = validDate;
             asset.WarrantyExpirationDate = AssetHelper.GetWarrantyExpirationDate(validDate);
-            asset.LocalPrice = price;
-            asset.PurchasePriceUSD = await currencyService.ConvertAsync(price, inputCurrency, "USD");
+            asset.PurchasePriceUSD = price;
+            asset.LocalPrice = await currencyService.ConvertAsync(price, "USD", currency);
 
 
             if (typeNumber == 1 || typeNumber == 2)
@@ -195,17 +204,19 @@ public static class Program
     {
         Console.Clear();
 
-        var assets = await assetService.GetAssets();
-
-        var computerAssets = context.Assets
+        var computerAssets = await context.Assets
+                            .AsNoTracking()
+                            .Include(a => a.Office)
                             .OfType<ComputerAsset>()
                             .OrderByDescending(a => a.PurchaseDate)
-                            .ToList();
+                            .ToListAsync();
 
-        var mobileAssets = context.Assets
+        var mobileAssets = await context.Assets
+                            .AsNoTracking()
+                            .Include(a => a.Office)
                             .OfType<MobileAsset>()
                             .OrderByDescending(a => a.PurchaseDate)
-                            .ToList();
+                            .ToListAsync();
 
         string header =
             $"{"Id",-8}" +
@@ -214,8 +225,8 @@ public static class Program
             $"{"Brand",-10}" +
             $"{"Model",-20}" +
             $"{"Purchase Date",-15}" +
-            $"{"Price (Local)", 20}" +
-            $"{"Price (Dollar)", 15}";
+            $"{"Price (Dollar)",15}" +
+            $"{"Price (Local)", 20}";
 
         string title = "    Asset list    ";
         int totalWidth = header.Length;
@@ -252,25 +263,16 @@ public static class Program
     {
         foreach (var asset in typeAssets)
         {
-            string inputCurrency;
-
-            if (asset.OfficeLocation == "USA")
-                inputCurrency = "USD";
-            else if (asset.OfficeLocation == "Sweden")
-                inputCurrency = "SEK";
-            else
-                inputCurrency = "EUR";
-
             string line =
                 $"{asset.Id,-8}" +
-                $"{asset.OfficeLocation,-10}" +
+                $"{asset.Office.Country,-10}" +
                 $"{asset.AssetType,-10}" +
                 $"{asset.Brand,-10}" +
                 $"{asset.ModelName,-20}" +
                 $"{asset.PurchaseDate,-15:yyyy-MM-dd}" +
+                $"{asset.PurchasePriceUSD, 15:N2}" +
                 $"{asset.LocalPrice, 15:N2}" +
-                $"{inputCurrency, 5}" +
-                $"{asset.PurchasePriceUSD, 15:N2}";
+                $"{asset.Office.Currency,5}";
 
             if (asset.WarrantyExpirationDate.AddMonths(-3) < DateTime.Now)
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -284,7 +286,7 @@ public static class Program
         }
     }
 
-    private static async Task EditAsset(AssetService assetService)
+    private static async Task EditAsset(MyDbContext context, AssetService assetService)
     {
         Console.Write("Enter Asset ID to edit: ");
 
@@ -308,10 +310,52 @@ public static class Program
         Console.Write($"New Model ({asset.ModelName}): ");
         string inputModel = Console.ReadLine() ?? "";
 
-        Console.Write($"New Office ({asset.OfficeLocation}): ");
-        string inputOffice = Console.ReadLine() ?? "";
+        int officeNumber;
+        string currency = "USD";
+        while (true)
+        {
+            Console.Write("Enter OfficeLocation (1: Sweden Office 2: USA Office 3: Germany Office 4.Turkey Office): ");
 
-        Console.Write($"New Local Price ({asset.LocalPrice}): ");
+            string inputOffice = Console.ReadLine() ?? "";
+
+            if (string.IsNullOrWhiteSpace(inputOffice))
+                break; // keep current office if user presses Enter
+
+
+            if (int.TryParse(inputOffice, out officeNumber) && (officeNumber >= 1 && officeNumber <= 4))
+            {
+                var swedenOffice = context.Offices.First(o => o.Country == "Sweden");
+                var usaOffice = context.Offices.First(o => o.Country == "USA");
+                var germanyOffice = context.Offices.First(o => o.Country == "Germany");
+                var turkeyOffice = context.Offices.First(o => o.Country == "Turkey");
+                
+                if (officeNumber == 1)
+                {
+                    asset.OfficeId = swedenOffice.Id;
+                    currency = swedenOffice.Currency;
+                }
+                else if (officeNumber == 2)
+                {
+                    asset.OfficeId = usaOffice.Id;
+                    currency = usaOffice.Currency;
+                }
+                else if (officeNumber == 3)
+                {
+                    asset.OfficeId = germanyOffice.Id;
+                    currency = germanyOffice.Currency;
+                }
+                else
+                {
+                    asset.OfficeId = turkeyOffice.Id;
+                    currency = turkeyOffice.Currency;
+                }
+                break;
+            }
+
+            Console.WriteLine("Invalid input. Try again.");
+        }
+
+        Console.Write($"New Price in USD({asset.PurchasePriceUSD}): ");
         string inputPrice = Console.ReadLine() ?? "";
 
         Console.Write($"New Purchase Date ({asset.PurchaseDate:yyyy-MM-dd}): ");
@@ -330,9 +374,6 @@ public static class Program
         if (!string.IsNullOrWhiteSpace(inputModel))
             asset.ModelName = inputModel;
 
-        if (!string.IsNullOrWhiteSpace(inputOffice))
-            asset.OfficeLocation = inputOffice;
-
         if (!string.IsNullOrWhiteSpace(inputSerial))
             asset.SerialNumber = inputSerial;
 
@@ -350,7 +391,8 @@ public static class Program
                     return;
                 }
 
-                asset.LocalPrice = price;
+                asset.PurchasePriceUSD = price;
+                asset.LocalPrice = await new CurrencyService().ConvertAsync(price, "USD", currency);
             }
             else
             {
@@ -376,11 +418,10 @@ public static class Program
             }
         }
 
-        await assetService.UpdateAsset(asset);
+        assetService.UpdateAsset(asset);
 
         Console.WriteLine("Asset updated successfully!");
     }
-
 
     private static async Task RemoveAsset(AssetService assetService)
     {
@@ -433,7 +474,7 @@ public static class Program
         Console.WriteLine($"Type: {asset.AssetType}");
         Console.WriteLine($"Brand: {asset.Brand}");
         Console.WriteLine($"Model: {asset.ModelName}");
-        Console.WriteLine($"Office: {asset.OfficeLocation}");
+        Console.WriteLine($"Office: {asset.Office.OfficeName}");
         Console.WriteLine($"Purchase Date: {asset.PurchaseDate:yyyy-MM-dd}");
         Console.WriteLine($"Warranty Expiration: {asset.WarrantyExpirationDate:yyyy-MM-dd}");
         Console.WriteLine($"Local Price: {asset.LocalPrice:N2}");

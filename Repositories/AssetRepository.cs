@@ -38,5 +38,17 @@ namespace SmartAssetTrackingSystem.Repositories
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task<Asset?> GetAssetById(int id)
+        {
+            return await _context.Assets.FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<List<Office>> GetOfficesAsync()
+        {
+            return await _context.Offices
+                .AsNoTracking()
+                .ToListAsync();
+        }
     }
 }

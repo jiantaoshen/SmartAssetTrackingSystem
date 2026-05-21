@@ -17,9 +17,11 @@ namespace SmartAssetTrackingSystem.Data
         public DbSet<Asset> Assets { get; set; }
         public DbSet<ComputerAsset> ComputerAssets { get; set; }
         public DbSet<MobileAsset> MobileAssets { get; set; }
+        public DbSet<Office> Offices { get; set; }
 
         protected override void OnModelCreating(ModelBuilder ModelBuilder)
         {
+
 
         }
     }

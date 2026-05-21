@@ -21,9 +21,6 @@ This project is an improvement of a previous project called ["WeeklyProject03_As
 6. Run `update-database` in the Package Manager Console to apply the migration and create the database and tables.
 7. Run the console application to start adding assets and viewing the list.
 
-## Getting started
-The console app will prompt for new assets. Enter `Q` for the office prompt to quit input mode and display the list.
-
 ## Features
 - Add assets via interactive console input
 - User input local price based on the office location (USD for US, SEK for Sweden, EUR for Germany) and it will be converted to USD (exchange rate based on current exchange rates) 

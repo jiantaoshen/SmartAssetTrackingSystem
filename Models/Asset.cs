@@ -20,7 +20,9 @@ namespace SmartAssetTrackingSystem.Models
 
         public decimal LocalPrice { get; set; }
 
-        public string OfficeLocation { get; set; } = string.Empty;
+        public int OfficeId { get; set; }
+
+        public Office Office { get; set; } = null!;
 
         public string? SerialNumber { get; set; }
 

@@ -1,7 +1,5 @@
 ﻿using SmartAssetTrackingSystem.Models;
 using SmartAssetTrackingSystem.Repositories;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace SmartAssetTrackingSystem.Services
 {
@@ -27,8 +25,7 @@ namespace SmartAssetTrackingSystem.Services
 
         public async Task<Asset?> GetAssetById(int id)
         {
-            var assets = await _repo.GetAssets(1, 20);
-            return assets.FirstOrDefault(a => a.Id == id);
+            return await _repo.GetAssetById(id);
         }
 
         public async Task UpdateAsset(Asset asset)
@@ -40,7 +37,5 @@ namespace SmartAssetTrackingSystem.Services
         {
             await _repo.RemoveAsset(id);
         }
-
-
     }
 }
