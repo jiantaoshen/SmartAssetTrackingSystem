@@ -25,6 +25,22 @@ namespace SmartAssetTrackingSystem.Services
             return await _repo.GetAssets(1, 20);
         }
 
+        public async Task<Asset?> GetAssetById(int id)
+        {
+            var assets = await _repo.GetAssets(1, 20);
+            return assets.FirstOrDefault(a => a.Id == id);
+        }
+
+        public async Task UpdateAsset(Asset asset)
+        {
+            await _repo.UpdateAsset(asset);
+        }
+
+        public async Task RemoveAsset(int id)
+        {
+            await _repo.RemoveAsset(id);
+        }
+
 
     }
 }

@@ -21,5 +21,22 @@ namespace SmartAssetTrackingSystem.Repositories
         {
             return await _context.Assets.Skip((PageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
         }
+
+        public async Task UpdateAsset(Asset asset)
+        {
+            _context.Assets.Update(asset);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveAsset(int id)
+        {
+            var asset = await _context.Assets.FindAsync(id);
+
+            if (asset != null)
+            {
+                _context.Assets.Remove(asset);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }

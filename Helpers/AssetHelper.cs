@@ -6,11 +6,6 @@ namespace SmartAssetTrackingSystem.Helpers
 {
     public static class AssetHelper
     {
-        public static decimal ConvertUsdToLocalCurrency(decimal usdAmount, decimal exchangeRate)
-        {
-            return usdAmount * exchangeRate;
-        }
-
         // Assuming a standard warranty period of 3 years (36 months)
         public static DateTime GetWarrantyExpirationDate(DateTime purchaseDate, int warrantyPeriodMonths = 36)
         {

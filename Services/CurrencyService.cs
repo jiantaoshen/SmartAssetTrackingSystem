@@ -4,23 +4,31 @@ using SmartAssetTrackingSystem.Services;
 
 public class CurrencyService : ICurrencyService
 {
+    private Dictionary<string, decimal>? _cachedRates;
+    private DateTime _lastFetchTime;
+
     public async Task<Dictionary<string, decimal>> GetRatesAsync()
     {
-        return await LoadEcbRatesAsync();
+        if (_cachedRates != null && DateTime.Now - _lastFetchTime < TimeSpan.FromHours(12))
+            return _cachedRates;
+
+        _cachedRates = await LoadEcbRatesAsync();
+        _lastFetchTime = DateTime.Now;
+
+        return _cachedRates;
     }
 
     public async Task<decimal> ConvertAsync(decimal amount, string fromCurrency, string toCurrency)
     {
-        var rates = await LoadEcbRatesAsync();
+        var rates = await GetRatesAsync();
 
         if (!rates.ContainsKey(fromCurrency) || !rates.ContainsKey(toCurrency))
             throw new Exception("Unsupported currency");
 
-        // Convert to EUR first, then to target
         decimal amountInEur = amount / rates[fromCurrency];
         decimal result = amountInEur * rates[toCurrency];
 
-        return result;
+        return Math.Round(result, 2);
     }
 
     private static async Task<Dictionary<string, decimal>> LoadEcbRatesAsync()
@@ -39,6 +47,7 @@ public class CurrencyService : ICurrencyService
         };
 
         var dailyCube = doc.Root.Element(ns + "Cube")?.Element(ns + "Cube");
+
         if (dailyCube == null)
             throw new Exception("ECB XML structure changed");
 

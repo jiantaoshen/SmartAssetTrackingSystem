@@ -10,5 +10,9 @@ namespace SmartAssetTrackingSystem.Repositories
         void AddAsset(Asset asset);
 
         Task<List<Asset>> GetAssets(int PageNumber, int PageSize);
+
+        Task UpdateAsset(Asset asset);
+
+        Task RemoveAsset(int id);
     }
 }

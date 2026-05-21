@@ -16,6 +16,9 @@ public static class Program
 
         var assetService = new AssetService(repo);
 
+        //Add Seed Data
+        var seeder = new TestDataSeeder(context, currencyService);
+        seeder.SeedDataAsync().Wait();
 
         while (true)
         {
@@ -32,12 +35,17 @@ public static class Program
                     Pause();
                     break;
                 case "3":
+                    await ShowList(assetService);
+                    await EditAsset(assetService);
                     Pause();
                     break;
                 case "4":
+                    await ShowList(assetService);
+                    await RemoveAsset(assetService);
                     Pause();
                     break;
                 case "5":
+                    await SearchAssetById(assetService);
                     Pause();
                     break;
                 case "6":
@@ -50,7 +58,7 @@ public static class Program
         }
     }
 
-    public static async Task InputData(AssetService assetService, CurrencyService currencyService)
+    private static async Task InputData(AssetService assetService, CurrencyService currencyService)
     {
         var rates = await currencyService.GetRatesAsync();
         Console.Clear();
@@ -182,20 +190,21 @@ public static class Program
         }
     }
 
-    public static async Task ShowList(AssetService assetService)
+    private static async Task ShowList(AssetService assetService)
     {
         Console.Clear();
 
         var assets = await assetService.GetAssets();
 
         string header =
-            $"{"Office",-15}" +
-            $"{"Type",-15}" +
-            $"{"Brand",-15}" +
-            $"{"Model",-15}" +
+            $"{"Id",-10}" +
+            $"{"Office",-10}" +
+            $"{"Type",-10}" +
+            $"{"Brand",-10}" +
+            $"{"Model",-20}" +
             $"{"Purchase Date",-15}" +
             $"{"Price (Local)",15}" +
-            $"{"Currency",15}" +
+            $"{"Currency",10}" +
             $"{"Price (Dollar)",15}";
 
         string title = "    Asset list    ";
@@ -229,13 +238,14 @@ public static class Program
             }
 
             string line =
-                $"{asset.OfficeLocation,-15}" +
-                $"{asset.AssetType,-15}" +
-                $"{asset.Brand,-15}" +
-                $"{asset.ModelName,-15}" +
+                $"{asset.Id,-10}" + 
+                $"{asset.OfficeLocation,-10}" +
+                $"{asset.AssetType,-10}" +
+                $"{asset.Brand,-10}" +
+                $"{asset.ModelName,-20}" +
                 $"{asset.PurchaseDate,-15:yyyy-MM-dd}" +
                 $"{asset.LocalPrice, 15:N2}" +
-                $"{inputCurrency ?? "N/A", 15}" +
+                $"{inputCurrency ?? "N/A", 10}" +
                 $"{asset.PurchasePriceUSD, 15:N2}";
 
             // Optional coloring logic (based on type or rules)
@@ -260,6 +270,163 @@ public static class Program
         Console.WriteLine(new string('=', header.Length));
     }
 
+    private static async Task EditAsset(AssetService assetService)
+    {
+        Console.Write("Enter Asset ID to edit: ");
+
+        if (!int.TryParse(Console.ReadLine(), out int id))
+        {
+            Console.WriteLine("Invalid ID.");
+            return;
+        }
+
+        var asset = await assetService.GetAssetById(id);
+
+        if (asset == null)
+        {
+            Console.WriteLine("Asset not found.");
+            return;
+        }
+
+        Console.Write($"New Brand ({asset.Brand}): ");
+        string inputBrand = Console.ReadLine() ?? "";
+
+        Console.Write($"New Model ({asset.ModelName}): ");
+        string inputModel = Console.ReadLine() ?? "";
+
+        Console.Write($"New Office ({asset.OfficeLocation}): ");
+        string inputOffice = Console.ReadLine() ?? "";
+
+        Console.Write($"New Local Price ({asset.LocalPrice}): ");
+        string inputPrice = Console.ReadLine() ?? "";
+
+        Console.Write($"New Purchase Date ({asset.PurchaseDate:yyyy-MM-dd}): ");
+        string inputDate = Console.ReadLine() ?? "";
+
+        Console.Write($"New Serial Number ({asset.SerialNumber}): ");
+        string inputSerial = Console.ReadLine() ?? "";
+
+        Console.Write($"New Employee Username ({asset.EmployeeUsername}): ");
+        string inputEmployee = Console.ReadLine() ?? "";
+
+        // Update only if user entered something
+        if (!string.IsNullOrWhiteSpace(inputBrand))
+            asset.Brand = inputBrand;
+
+        if (!string.IsNullOrWhiteSpace(inputModel))
+            asset.ModelName = inputModel;
+
+        if (!string.IsNullOrWhiteSpace(inputOffice))
+            asset.OfficeLocation = inputOffice;
+
+        if (!string.IsNullOrWhiteSpace(inputSerial))
+            asset.SerialNumber = inputSerial;
+
+        if (!string.IsNullOrWhiteSpace(inputEmployee))
+            asset.EmployeeUsername = inputEmployee;
+
+        // Price validation
+        if (!string.IsNullOrWhiteSpace(inputPrice))
+        {
+            if (decimal.TryParse(inputPrice, out decimal price))
+            {
+                if (price <= 0)
+                {
+                    Console.WriteLine("Price must be greater than 0.");
+                    return;
+                }
+
+                asset.LocalPrice = price;
+            }
+            else
+            {
+                Console.WriteLine("Invalid price.");
+                return;
+            }
+        }
+
+        // Date validation
+        if (!string.IsNullOrWhiteSpace(inputDate))
+        {
+            if (DateTime.TryParse(inputDate, out DateTime purchaseDate))
+            {
+                asset.PurchaseDate = purchaseDate;
+
+                // Auto-update warranty
+                asset.WarrantyExpirationDate = AssetHelper.GetWarrantyExpirationDate(purchaseDate);
+            }
+            else
+            {
+                Console.WriteLine("Invalid date.");
+                return;
+            }
+        }
+
+        await assetService.UpdateAsset(asset);
+
+        Console.WriteLine("Asset updated successfully!");
+    }
+
+
+    private static async Task RemoveAsset(AssetService assetService)
+    {
+        Console.Write("Enter Asset ID to remove: ");
+
+        string inputId = Console.ReadLine() ?? "";
+
+        if (!int.TryParse(inputId, out int id))
+        {
+            Console.WriteLine("Invalid Asset ID.");
+            return;
+        }
+
+        var asset = await assetService.GetAssetById(id);
+
+        if (asset == null)
+        {
+            Console.WriteLine("Asset not found.");
+            return;
+        }
+
+        await assetService.RemoveAsset(id);
+
+        Console.WriteLine("Asset removed successfully!");
+    }
+
+    private static async Task SearchAssetById(AssetService assetService)
+    {
+        Console.Write("Enter Asset ID: ");
+
+        string inputId = Console.ReadLine() ?? "";
+
+        if (!int.TryParse(inputId, out int id))
+        {
+            Console.WriteLine("Invalid Asset ID.");
+            return;
+        }
+
+        var asset = await assetService.GetAssetById(id);
+
+        if (asset == null)
+        {
+            Console.WriteLine("Asset not found.");
+            return;
+        }
+
+        Console.WriteLine();
+        Console.WriteLine("===== Asset Details =====");
+        Console.WriteLine($"ID: {asset.Id}");
+        Console.WriteLine($"Type: {asset.AssetType}");
+        Console.WriteLine($"Brand: {asset.Brand}");
+        Console.WriteLine($"Model: {asset.ModelName}");
+        Console.WriteLine($"Office: {asset.OfficeLocation}");
+        Console.WriteLine($"Purchase Date: {asset.PurchaseDate:yyyy-MM-dd}");
+        Console.WriteLine($"Warranty Expiration: {asset.WarrantyExpirationDate:yyyy-MM-dd}");
+        Console.WriteLine($"Local Price: {asset.LocalPrice:N2}");
+        Console.WriteLine($"Price USD: {asset.PurchasePriceUSD:N2}");
+        Console.WriteLine($"Serial Number: {asset.SerialNumber ?? "N/A"}");
+        Console.WriteLine($"Employee Username: {asset.EmployeeUsername ?? "N/A"}");
+    }
 
     static void PrintMenu()
     {
@@ -278,4 +445,6 @@ public static class Program
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
     }
+
+
 }
