@@ -42,4 +42,6 @@ This project is an improvement of a previous project called ["WeeklyProject03_As
 - `Models/Assets.cs` — Asset models: `Asset`, `ComputerAsset`, `MobileAsset`
 
 ## Future work
-... (work in progress)
+Because console.clear() only clears the current visible console buffer in Visual Studio, the console output will be cluttered after multiple interactions.
+I'm going to implement a paging system to show only a limited number of assets at a time, and allow users to navigate through pages of assets. 
+This will improve the user experience and make it easier to manage larger lists of assets without overwhelming the console output.

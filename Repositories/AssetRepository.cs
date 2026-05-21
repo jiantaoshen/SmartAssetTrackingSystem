@@ -20,6 +20,17 @@ namespace SmartAssetTrackingSystem.Repositories
         public async Task<List<Asset>> GetAssets(int PageNumber, int PageSize)
         {
             return await _context.Assets.Skip((PageNumber - 1) * PageSize).Take(PageSize).ToListAsync();
+
+        }
+
+        public async Task<List<Asset>> GetAssetsByOffice(int officeId)
+        {
+            return await _context.Assets
+                .AsNoTracking()
+                .Include(a => a.Office)
+                .Where(a => a.OfficeId == officeId)
+                .OrderByDescending(a => a.PurchaseDate)
+                .ToListAsync();
         }
 
         public async Task UpdateAsset(Asset asset)

@@ -14,5 +14,7 @@ namespace SmartAssetTrackingSystem.Repositories
         Task<List<Office>> GetOfficesAsync();
         Task<Asset?> GetAssetById(int id);
 
+        Task<List<Asset>> GetAssetsByOffice(int officeId);
+
     }
 }

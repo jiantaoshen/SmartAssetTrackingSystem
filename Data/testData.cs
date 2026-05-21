@@ -24,28 +24,28 @@ namespace SmartAssetTrackingSystem.Data
                 {
                     new Office
                     {
-                        OfficeName = "Sweden Office",
+                        OfficeName = "STOCKHOLM OFFICE",
                         Country = "Sweden",
                         Currency = "SEK"
                     },
 
                     new Office
                     {
-                        OfficeName = "USA Office",
+                        OfficeName = "NEW YORK OFFICE",
                         Country = "USA",
                         Currency = "USD"
                     },
 
                     new Office
                     {
-                        OfficeName = "Germany Office",
+                        OfficeName = "BERLIN OFFICE",
                         Country = "Germany",
                         Currency = "EUR"
                     },
 
                     new Office
                     {
-                        OfficeName = "Turkey Office",
+                        OfficeName = "ANKARA OFFICE",
                         Country = "Turkey",
                         Currency = "TRY"
                     }

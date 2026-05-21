@@ -2,9 +2,11 @@
 using SmartAssetTrackingSystem.Data;
 using SmartAssetTrackingSystem.Helpers;
 using SmartAssetTrackingSystem.Models;
+using SmartAssetTrackingSystem.Reports;
 using SmartAssetTrackingSystem.Repositories;
 using SmartAssetTrackingSystem.Services;
 using System.Globalization;
+using System.Reflection.PortableExecutable;
 
 public static class Program
 {
@@ -13,13 +15,17 @@ public static class Program
         MyDbContext context = new MyDbContext();
 
         var repo = new AssetRepository();
+        var reportRepo = new ReportRepository();
         var currencyService = new CurrencyService();
 
         var assetService = new AssetService(repo);
+        var reportService = new ReportService(reportRepo);
 
         //Add Seed Data
         var seeder = new TestDataSeeder(context, currencyService);
         seeder.SeedDataAsync().Wait();
+
+        Office office;
 
         while (true)
         {
@@ -50,7 +56,93 @@ public static class Program
                     Pause();
                     break;
                 case "6":
-                    return;
+                    int officeNumber;
+                    Console.Write("Enter OfficeLocation (1: STOCKHOLM OFFICE 2: NEW YORK OFFICE 3: BERLIN OFFICE 4: ANKARA OFFICE): ");
+                    string inputOffice = Console.ReadLine() ?? "";
+
+                    if (int.TryParse(inputOffice, out officeNumber) && (officeNumber >= 1 && officeNumber <= 4))
+                    {
+                        ClearConsole();
+
+                        office = officeNumber switch
+                        {
+                            1 => context.Offices.First(o => o.Country == "Sweden"),
+                            2 => context.Offices.First(o => o.Country == "USA"),
+                            3 => context.Offices.First(o => o.Country == "Germany"),
+                            4 => context.Offices.First(o => o.Country == "Turkey"),
+                            _ => throw new InvalidOperationException()
+                        };
+
+                        var assets = await assetService.GetAssetsByOffice(office.Id);
+                        decimal totalValue = await reportService.GetTotalAssetValuePerOffice(office.Id);
+                        ReportsGeneration.GenerateOfficeReport(assets, office.OfficeName, totalValue);
+                        Pause();
+                        break;
+                    }
+
+                    Console.WriteLine("Invalid input. Try again.");
+                    Pause();
+                    break;
+                 case "7":
+                    ClearConsole();
+                    string header =
+                        $"{"Id",-8}" +
+                        $"{"Office",-10}" +
+                        $"{"Type",-10}" +
+                        $"{"Brand",-10}" +
+                        $"{"Model",-20}" +
+                        $"{"Purchase Date",-15}" +
+                        $"{"Price (Dollar)",15}" +
+                        $"{"Price (Local)",20}";
+
+                    string title = "    Report    ";
+                    int totalWidth = header.Length;
+
+                    int left = (totalWidth - title.Length) / 2;
+
+                    string titleline =
+                        new string('=', left) +
+                        title +
+                        new string('=', totalWidth - left - title.Length);
+
+                    Console.WriteLine(titleline + "\n");
+
+                    Console.WriteLine("Office Asset Counts");
+                    Console.WriteLine(new string('-', header.Length));
+
+                    office = context.Offices.First(o => o.Country == "Sweden");
+                    int swedenCount = await reportService.GetAssetCountPerOffice(office.Id);
+                    Console.WriteLine($"Asset Count for {office.OfficeName}: {swedenCount}");
+
+                    office = context.Offices.First(o => o.Country == "USA");
+                    int usaCount = await reportService.GetAssetCountPerOffice(office.Id);
+                    Console.WriteLine($"Asset Count for {office.OfficeName}: {usaCount}");
+
+                    office = context.Offices.First(o => o.Country == "Germany");
+                    int germanyCount = await reportService.GetAssetCountPerOffice(office.Id);
+                    Console.WriteLine($"Asset Count for {office.OfficeName}: {germanyCount}");
+
+                    office = context.Offices.First(o => o.Country == "Turkey");
+                    int turkeyCount = await reportService.GetAssetCountPerOffice(office.Id);
+                    Console.WriteLine($"Asset Count for {office.OfficeName}: {turkeyCount}");
+
+                    Console.WriteLine("\nAssets Near Expiration");
+                    Console.WriteLine(new string('-', header.Length));
+                    
+                    var expiringAssets = await reportService.GetAssetsCloseToExpiration(3);
+                    AssetHelper.PrintAssets(expiringAssets);
+
+                    Console.WriteLine("\nMost Expensive Assets (Top 5)");
+                    Console.WriteLine(new string('-', header.Length));
+                    var expensiveAssets = await reportService.GetMostExpensiveAssets(5);
+                    AssetHelper.PrintAssets(expensiveAssets);
+
+                    Console.WriteLine(new string('=', header.Length));
+
+                    Pause();
+                    break;
+                 case "8":
+                    return; 
                 default:
                     Console.WriteLine("Invalid choice!");
                     Pause();
@@ -62,7 +154,7 @@ public static class Program
     private static async Task InputData(MyDbContext context, AssetService assetService, CurrencyService currencyService)
     {
         var rates = await currencyService.GetRatesAsync();
-        Console.Clear();
+        ClearConsole();
 
         while (true)
         {
@@ -202,7 +294,7 @@ public static class Program
 
     private static async Task ShowList(AssetService assetService, MyDbContext context)
     {
-        Console.Clear();
+        ClearConsole();
 
         var computerAssets = await context.Assets
                             .AsNoTracking()
@@ -240,50 +332,23 @@ public static class Program
 
         Console.WriteLine(titleline + "\n");
 
-        Console.WriteLine("\nComputers");
+        Console.WriteLine("Computers");
 
         Console.WriteLine(new string('-', header.Length));
         Console.WriteLine(header);
         Console.WriteLine(new string('-', header.Length));
 
-        PrintList(computerAssets);
+        AssetHelper.PrintAssets(computerAssets);
 
         Console.WriteLine("\nMobile Devices");
         Console.WriteLine(new string('-', header.Length));
         Console.WriteLine(header);
         Console.WriteLine(new string('-', header.Length));
 
-        PrintList(mobileAssets);
+        AssetHelper.PrintAssets(mobileAssets);
 
         Console.WriteLine("\n");
         Console.WriteLine(new string('=', header.Length));
-    }
-
-    private static void PrintList(IEnumerable<Asset> typeAssets)
-    {
-        foreach (var asset in typeAssets)
-        {
-            string line =
-                $"{asset.Id,-8}" +
-                $"{asset.Office.Country,-10}" +
-                $"{asset.AssetType,-10}" +
-                $"{asset.Brand,-10}" +
-                $"{asset.ModelName,-20}" +
-                $"{asset.PurchaseDate,-15:yyyy-MM-dd}" +
-                $"{asset.PurchasePriceUSD, 15:N2}" +
-                $"{asset.LocalPrice, 15:N2}" +
-                $"{asset.Office.Currency,5}";
-
-            if (asset.WarrantyExpirationDate.AddMonths(-3) < DateTime.Now)
-                Console.ForegroundColor = ConsoleColor.Red;
-            else if (asset.WarrantyExpirationDate.AddMonths(-6) < DateTime.Now)
-                Console.ForegroundColor = ConsoleColor.Yellow;
-            else
-                Console.ResetColor();
-
-            Console.WriteLine(line);
-            Console.ResetColor();
-        }
     }
 
     private static async Task EditAsset(MyDbContext context, AssetService assetService)
@@ -485,19 +550,26 @@ public static class Program
 
     static void PrintMenu()
     {
-        Console.Clear();
+        ClearConsole();
 
         Console.WriteLine("1. Add Asset");
         Console.WriteLine("2. Show all Assets");
         Console.WriteLine("3. Update Asset");
         Console.WriteLine("4. Delete Asset");
         Console.WriteLine("5. Search Asset");
-        Console.WriteLine("6. Exit");
+        Console.WriteLine("6. Get Office Report");
+        Console.WriteLine("7. Get Company Report");
+        Console.WriteLine("8. Exit");
     }
     static void Pause()
     {
         Console.WriteLine("\nPress any key to continue...");
         Console.ReadKey();
+    }
+
+    static void ClearConsole()
+    {
+        Console.Clear();
     }
 
 

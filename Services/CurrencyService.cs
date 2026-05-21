@@ -47,18 +47,23 @@ public class CurrencyService : ICurrencyService
             ["EUR"] = 1m
         };
 
-        var dailyCube = doc.Root.Element(ns + "Cube")?.Element(ns + "Cube");
+        var dailyCube = doc.Root?
+            .Element(ns + "Cube")?
+            .Element(ns + "Cube");
 
         if (dailyCube == null)
             throw new Exception("ECB XML structure changed");
 
         foreach (var cube in dailyCube.Elements(ns + "Cube"))
         {
-            string currency = (string)cube.Attribute("currency");
-            string rateStr = (string)cube.Attribute("rate");
+            string? currency = (string?)cube.Attribute("currency");
+            string? rateStr = (string?)cube.Attribute("rate");
 
             if (!string.IsNullOrEmpty(currency) &&
-                decimal.TryParse(rateStr, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal rate))
+                decimal.TryParse(rateStr,
+                    NumberStyles.Any,
+                    CultureInfo.InvariantCulture,
+                    out decimal rate))
             {
                 rates[currency] = rate;
             }

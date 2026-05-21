@@ -23,6 +23,11 @@ namespace SmartAssetTrackingSystem.Services
             return await _repo.GetAssets(1, 20);
         }
 
+        public async Task<List<Asset>> GetAssetsByOffice(int officeId)
+        {
+            return await _repo.GetAssetsByOffice(officeId);
+        }
+
         public async Task<Asset?> GetAssetById(int id)
         {
             return await _repo.GetAssetById(id);
