@@ -1,8 +1,9 @@
-﻿using SmartAssetTrackingSystem.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using SmartAssetTrackingSystem.Data;
+using SmartAssetTrackingSystem.Helpers;
 using SmartAssetTrackingSystem.Models;
 using SmartAssetTrackingSystem.Repositories;
 using SmartAssetTrackingSystem.Services;
-using SmartAssetTrackingSystem.Helpers;
 using System.Globalization;
 
 public static class Program
@@ -31,16 +32,16 @@ public static class Program
                     await InputData(assetService, currencyService);
                     break;
                 case "2":
-                    await ShowList(assetService);
+                    await ShowList(assetService, context);
                     Pause();
                     break;
                 case "3":
-                    await ShowList(assetService);
+                    await ShowList(assetService, context);
                     await EditAsset(assetService);
                     Pause();
                     break;
                 case "4":
-                    await ShowList(assetService);
+                    await ShowList(assetService, context);
                     await RemoveAsset(assetService);
                     Pause();
                     break;
@@ -190,22 +191,31 @@ public static class Program
         }
     }
 
-    private static async Task ShowList(AssetService assetService)
+    private static async Task ShowList(AssetService assetService, MyDbContext context)
     {
         Console.Clear();
 
         var assets = await assetService.GetAssets();
 
+        var computerAssets = context.Assets
+                            .OfType<ComputerAsset>()
+                            .OrderByDescending(a => a.PurchaseDate)
+                            .ToList();
+
+        var mobileAssets = context.Assets
+                            .OfType<MobileAsset>()
+                            .OrderByDescending(a => a.PurchaseDate)
+                            .ToList();
+
         string header =
-            $"{"Id",-10}" +
+            $"{"Id",-8}" +
             $"{"Office",-10}" +
             $"{"Type",-10}" +
             $"{"Brand",-10}" +
             $"{"Model",-20}" +
             $"{"Purchase Date",-15}" +
-            $"{"Price (Local)",15}" +
-            $"{"Currency",10}" +
-            $"{"Price (Dollar)",15}";
+            $"{"Price (Local)", 20}" +
+            $"{"Price (Dollar)", 15}";
 
         string title = "    Asset list    ";
         int totalWidth = header.Length;
@@ -218,56 +228,60 @@ public static class Program
             new string('=', totalWidth - left - title.Length);
 
         Console.WriteLine(titleline + "\n");
-        Console.WriteLine("\n" + header);
+
+        Console.WriteLine("\nComputers");
+
+        Console.WriteLine(new string('-', header.Length));
+        Console.WriteLine(header);
         Console.WriteLine(new string('-', header.Length));
 
-        foreach (var asset in assets)
+        PrintList(computerAssets);
+
+        Console.WriteLine("\nMobile Devices");
+        Console.WriteLine(new string('-', header.Length));
+        Console.WriteLine(header);
+        Console.WriteLine(new string('-', header.Length));
+
+        PrintList(mobileAssets);
+
+        Console.WriteLine("\n");
+        Console.WriteLine(new string('=', header.Length));
+    }
+
+    private static void PrintList(IEnumerable<Asset> typeAssets)
+    {
+        foreach (var asset in typeAssets)
         {
             string inputCurrency;
+
             if (asset.OfficeLocation == "USA")
-            {
                 inputCurrency = "USD";
-            }
             else if (asset.OfficeLocation == "Sweden")
-            {
                 inputCurrency = "SEK";
-            }
             else
-            {
                 inputCurrency = "EUR";
-            }
 
             string line =
-                $"{asset.Id,-10}" + 
+                $"{asset.Id,-8}" +
                 $"{asset.OfficeLocation,-10}" +
                 $"{asset.AssetType,-10}" +
                 $"{asset.Brand,-10}" +
                 $"{asset.ModelName,-20}" +
                 $"{asset.PurchaseDate,-15:yyyy-MM-dd}" +
                 $"{asset.LocalPrice, 15:N2}" +
-                $"{inputCurrency ?? "N/A", 10}" +
+                $"{inputCurrency, 5}" +
                 $"{asset.PurchasePriceUSD, 15:N2}";
 
-            // Optional coloring logic (based on type or rules)
             if (asset.WarrantyExpirationDate.AddMonths(-3) < DateTime.Now)
-            {
                 Console.ForegroundColor = ConsoleColor.Red;
-            }
             else if (asset.WarrantyExpirationDate.AddMonths(-6) < DateTime.Now)
-            {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-            }
             else
-            {
                 Console.ResetColor();
-            }
 
             Console.WriteLine(line);
             Console.ResetColor();
         }
-
-        Console.WriteLine("\n");
-        Console.WriteLine(new string('=', header.Length));
     }
 
     private static async Task EditAsset(AssetService assetService)
@@ -432,7 +446,6 @@ public static class Program
     {
         Console.Clear();
 
-        Console.WriteLine("Menu");
         Console.WriteLine("1. Add Asset");
         Console.WriteLine("2. Show all Assets");
         Console.WriteLine("3. Update Asset");
