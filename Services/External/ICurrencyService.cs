@@ -1,4 +1,4 @@
-﻿namespace SmartAssetTrackingSystem.Services
+﻿namespace SmartAssetTrackingSystem.Services.External
 {
     public interface ICurrencyService
     {

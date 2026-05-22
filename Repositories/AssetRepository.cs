@@ -9,10 +9,10 @@ namespace SmartAssetTrackingSystem.Repositories
     {
         private readonly MyDbContext _context = new();
 
-        public void AddAsset(Asset asset)
+        public async Task AddAsset(Asset asset)
         {
             _context.Assets.Add(asset);
-            _context.SaveChanges();
+            await _context.SaveChangesAsync();
         }
 
 
@@ -52,13 +52,28 @@ namespace SmartAssetTrackingSystem.Repositories
 
         public async Task<Asset?> GetAssetById(int id)
         {
-            return await _context.Assets.FirstOrDefaultAsync(a => a.Id == id);
+            return await _context.Assets
+                .Include(a => a.Office)
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        public async Task<List<Office>> GetOfficesAsync()
+        public async Task<List<ComputerAsset>> GetComputerAssetsAsync()
         {
-            return await _context.Offices
+            return await _context.Assets
                 .AsNoTracking()
+                .Include(a => a.Office)
+                .OfType<ComputerAsset>()
+                .OrderByDescending(a => a.PurchaseDate)
+                .ToListAsync();
+        }
+
+        public async Task<List<MobileAsset>> GetMobileAssetsAsync()
+        {
+            return await _context.Assets
+                .AsNoTracking()
+                .Include(a => a.Office)
+                .OfType<MobileAsset>()
+                .OrderByDescending(a => a.PurchaseDate)
                 .ToListAsync();
         }
     }

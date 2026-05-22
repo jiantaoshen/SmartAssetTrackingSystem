@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 using System.Xml.Linq;
-using SmartAssetTrackingSystem.Services;
+using SmartAssetTrackingSystem.Services.External;
 
 public class CurrencyService : ICurrencyService
 {

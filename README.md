@@ -1,4 +1,4 @@
-# Smart Asset Tracking System (work in progress)
+# Smart Asset Tracking System
 Small console application to track company assets (computers and phones). 
 The app stores simple asset records, calculates end-of-life (EoL) and prints a formatted asset list with local and converted prices.
 This project is an improvement of a previous project called ["WeeklyProject03_AssetTracking"](https://github.com/jiantaoshen/WeeklyProject03_AssetTracking).
@@ -29,19 +29,23 @@ This project is an improvement of a previous project called ["WeeklyProject03_As
 - Database `Assets` with discriminator `ComputerAsset` and `MobileAsset`
 - Sample assets are inserted at startup for quick inspection
 
-
 ## Tech stack
 - C# 14
 - .NET 10
 - Entity Framework Core 10
-- SQL Server
+- SQL Local Server
 
-## Project structure (high level)
+## Project structure 
 - `Program.cs` — Entry point
+- All functions in Program.cs are from `AssetService.cs` in the Services folder, which contains all the business logic for asset management and user interaction.
 - `Data/MyDbContext.cs` — Database context for Entity Framework Core
-- `Models/Assets.cs` — Asset models: `Asset`, `ComputerAsset`, `MobileAsset`
+- `Data/testData.cs` — Test data initialization
+- `Models` — Asset models: `Asset`, `ComputerAsset`, `MobileAsset` and Office model: `Office`
+- `Repositories` — Repository and interface for Reports, Assets and Offices. 
+- `Helpers` — Utility functions and extensions.
+- `Services/External` — External services
 
 ## Future work
-Because console.clear() only clears the current visible console buffer in Visual Studio, the console output will be cluttered after multiple interactions.
+- Because console.clear() only clears the current visible console buffer in Visual Studio, the console output will be cluttered after multiple interactions.
 I'm going to implement a paging system to show only a limited number of assets at a time, and allow users to navigate through pages of assets. 
 This will improve the user experience and make it easier to manage larger lists of assets without overwhelming the console output.

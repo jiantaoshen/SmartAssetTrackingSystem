@@ -13,15 +13,17 @@ namespace SmartAssetTrackingSystem.Helpers
             return purchaseDate.AddMonths(warrantyPeriodMonths);
         }
 
-        public static string GetColor(DateTime warrantyExpirationDate)
+        // Determine color based on how close the warranty expiration date is
+        public static ConsoleColor GetColor(DateTime warrantyExpirationDate)
         {
             if (DateTime.Now >= warrantyExpirationDate.AddMonths(-3))
-                return "RED";
+                return ConsoleColor.Red;
             if (DateTime.Now >= warrantyExpirationDate.AddMonths(-6))
-                return "YELLOW";
-            return "NORMAL";
+                return ConsoleColor.Yellow;
+            return ConsoleColor.White;
         }
 
+        // Print assets in a tabular format with color coding for warranty status
         public static void PrintAssets(IEnumerable<Asset> typeAssets)
         {
             foreach (var asset in typeAssets)
@@ -37,16 +39,12 @@ namespace SmartAssetTrackingSystem.Helpers
                     $"{asset.LocalPrice,15:N2}" +
                     $"{asset.Office.Currency,5}";
 
-                if (asset.WarrantyExpirationDate.AddMonths(-3) < DateTime.Now)
-                    Console.ForegroundColor = ConsoleColor.Red;
-                else if (asset.WarrantyExpirationDate.AddMonths(-6) < DateTime.Now)
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                else
-                    Console.ResetColor();
-
+                Console.ForegroundColor = GetColor(asset.WarrantyExpirationDate);
                 Console.WriteLine(line);
                 Console.ResetColor();
             }
+
+            Console.WriteLine();
         }
     }
 }
