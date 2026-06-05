@@ -9,17 +9,11 @@ This project is an improvement of a previous project called ["WeeklyProject03_As
 - Use Entity Framework Core with an SQL local database instead of hardcoded sample data, to allow for more realistic data management.
 
 ## Set up
-1. Clone the repository and open the solution in Visual Studio.
-2. Install follow Nuget packages in Visual Studio:
-	- Microsoft.EntityFrameworkCore 10.0.8
-	- Microsoft.EntityFrameworkCore.Tools 10.0.8
-	- Microsoft.EntityFrameworkCore.Design 10.0.8
-	- Microsoft.EntityFrameworkCore.sqlServer 10.0.8
-3. Install SQL Server Developer Edition or use an existing SQL Server instance.
-4. Install SQL Server Management Studio (SSMS) in Visual Studio Installer for database management.
-5. Run `add-migration init-table-creation` in the Package Manager Console to create the initial migration for the database schema.
-6. Run `update-database` in the Package Manager Console to apply the migration and create the database and tables.
-7. Run the console application to start adding assets and viewing the list.
+1. Clone the repository and open the solution in Visual Studio 2026.
+2. Install SQL Server Developer Edition or use an existing SQL Server instance.
+3. Install SQL Server Management Studio (SSMS) in Visual Studio Installer for database management.
+4. Run `update-database` in the Package Manager Console to apply the migration and create the database and tables.
+5. Run the console application to start adding assets and viewing the list.
 
 ## Features
 - Add assets via interactive console input
